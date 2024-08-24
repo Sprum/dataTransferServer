@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 type Server struct {
@@ -37,6 +38,9 @@ func (s *Server) Start() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		tcpConn := con.(*net.TCPConn)
+		tcpConn.SetKeepAlive(true)
+		tcpConn.SetKeepAlivePeriod(2 * time.Minute)
 		go writeFile(con, outFolder)
 	}
 }
@@ -50,6 +54,8 @@ func writeFile(con net.Conn, outFolder string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println("Handshake sent...")
+
 	//2. receive file name
 	fileNameBuf := make([]byte, 256)
 	_, err = io.ReadFull(con, fileNameBuf)
@@ -61,6 +67,7 @@ func writeFile(con net.Conn, outFolder string) {
 		log.Fatal("file name is empty")
 		return
 	}
+	fmt.Printf("File name received: %s\n", fileName)
 
 	// 3. create the file
 	file, err := os.Create(filepath.Join(outFolder, fileName))
@@ -70,15 +77,16 @@ func writeFile(con net.Conn, outFolder string) {
 	defer file.Close()
 
 	// 4. loop until End of File: receive and write
-	for {
-		_, err := io.Copy(file, con)
-		if err != nil {
-			if err == io.EOF {
-				fmt.Println("file transfer successful ")
-				return
-			} else {
-				log.Fatal(err)
-			}
+	fmt.Println("starting to receive data...")
+	nBytes, err := io.Copy(file, con)
+	if err != nil {
+		if err == io.EOF {
+			fmt.Println("file transfer successful ")
+			return
+		} else {
+			log.Fatal(err)
 		}
 	}
+	fmt.Printf("file transfer %d bytes\n", nBytes)
+
 }
