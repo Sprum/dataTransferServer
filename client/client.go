@@ -35,6 +35,7 @@ func (c *Client) SendFile() {
 		log.Fatalf("Error connecting to server: %v", err)
 	}
 	defer con.Close()
+	fmt.Println("connection established, waiting for handshake.")
 
 	// 1. Get Handshake
 	handshakeBuf := make([]byte, len("HANDSHAKE_OK"))
@@ -45,6 +46,7 @@ func (c *Client) SendFile() {
 	if string(handshakeBuf) != "HANDSHAKE_OK" {
 		log.Fatal("Error receiving Handshake")
 	}
+	fmt.Println("Handshake successful, sending filename")
 
 	// 2. send filename
 	filenameBuf := make([]byte, 256) // padding of 256 is expected by the server
@@ -53,6 +55,7 @@ func (c *Client) SendFile() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println("Filename sent. Sending file data...")
 
 	// 3. send file data
 	_, err = io.Copy(con, file)

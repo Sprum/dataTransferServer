@@ -29,7 +29,7 @@ func (s *Server) Start() {
 		return
 	}
 	defer ln.Close()
-	fmt.Printf("Server listening on %s", url)
+	fmt.Printf("Server listening on %s\n", url)
 
 	// Accept Connection
 	for {
